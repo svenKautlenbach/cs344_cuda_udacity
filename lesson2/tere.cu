@@ -126,6 +126,20 @@ __global__ void increment100Elements10MilThreadsAtomic(int* g)
     atomicAdd(g + i, 1);
 }
 
+void checkArray(int* g, size_t len, const int expectedValue)
+{
+    int h_arr[len];
+    cudaMemcpy(h_arr, g, len, cudaMemcpyDeviceToHost);
+    for (int i = 0; i < len; i++)
+    {
+        if (h_arr[i] != expectedValue)
+        {
+            printf("Array item %d is not equal to %d(real:%d)\n", i, expectedValue, h_arr[i]);
+            return;
+        }
+    }
+}
+
 int tere(int exampleNr, bool print)
 {
     if (exampleNr == 1)
@@ -158,8 +172,6 @@ int tere(int exampleNr, bool print)
         constexpr int THREAD_COUNT = 1000000;
         constexpr int BLOCK_WIDTH = 10000;
 
-
-        int h_arr[10];
         int* d_array;
         cudaMalloc(&d_array, ARRAY_SIZE);
         cudaMemset(d_array, 0, ARRAY_SIZE);
@@ -190,6 +202,7 @@ int tere(int exampleNr, bool print)
             incrementMilElementsMilThreads<<<THREAD_COUNT/BLOCK_WIDTH, BLOCK_WIDTH>>>(d_array);
             timer.Stop();
 
+            checkArray(d_array, ARRAY_ITEMS, 1);
             printf("incrementMilElementsMilThreads took %g ms\n", timer.Elapsed());
 
             cudaFree(d_array);
@@ -210,6 +223,7 @@ int tere(int exampleNr, bool print)
             incrementMilElementsMilThreadsAtomic<<<THREAD_COUNT/BLOCK_WIDTH, BLOCK_WIDTH>>>(d_array);
             timer.Stop();
 
+            checkArray(d_array, ARRAY_ITEMS, 1);
             printf("incrementMilElementsMilThreadsAtomic took %g ms\n", timer.Elapsed());
 
             cudaFree(d_array);
@@ -230,6 +244,7 @@ int tere(int exampleNr, bool print)
             increment100ElementsMilThreads<<<THREAD_COUNT/BLOCK_WIDTH, BLOCK_WIDTH>>>(d_array);
             timer.Stop();
 
+            checkArray(d_array, ARRAY_ITEMS, THREAD_COUNT / ARRAY_ITEMS);
             printf("increment100ElementsMilThreads took %g ms\n", timer.Elapsed());
 
             cudaFree(d_array);
@@ -250,6 +265,7 @@ int tere(int exampleNr, bool print)
             increment100ElementsMilThreadsAtomic<<<THREAD_COUNT/BLOCK_WIDTH, BLOCK_WIDTH>>>(d_array);
             timer.Stop();
 
+            checkArray(d_array, ARRAY_ITEMS , THREAD_COUNT / ARRAY_ITEMS);
             printf("increment100ElementsMilThreadsAtomic took %g ms\n", timer.Elapsed());
 
             cudaFree(d_array);
@@ -270,6 +286,7 @@ int tere(int exampleNr, bool print)
             increment100Elements10MilThreadsAtomic<<<THREAD_COUNT/BLOCK_WIDTH, BLOCK_WIDTH>>>(d_array);
             timer.Stop();
 
+            checkArray(d_array, ARRAY_ITEMS , THREAD_COUNT / ARRAY_ITEMS);
             printf("increment100Elements10MilThreadsAtomic took %g ms\n", timer.Elapsed());
 
             cudaFree(d_array);
